@@ -30,76 +30,44 @@ namespace AddingServiceReferences
             var configuration = WebConfigurationManager.OpenWebConfiguration("~");
             ServiceModelSectionGroup secgroup = (ServiceModelSectionGroup)configuration.GetSectionGroup("system.serviceModel");
 
-            bool hasValidation = false;
-            bool hasNIF = false;
-            bool hasPayNow = false;
-            bool hasPrtner = false;
-
+            bool hasBasicPartyService = false;
+            bool hasWsPartyService = false;
             bool hasUpdate = false;
 
+            //Verify if the BasicHttpBinding element exist
             foreach (BasicHttpBindingElement binding in secgroup.Bindings.BasicHttpBinding.Bindings)
             {
-                if (binding.Name == "BasicHttpBinding_INIWS_Validation")
-                    hasValidation = true;
-
-                if (binding.Name == "BasicHttpBinding_INIWS_NIF")
-                    hasNIF = true;
-
-                if (binding.Name == "BasicHttpsBinding_IPayNow")
-                    hasPayNow = true;
+                if (binding.Name == "BasicHttpBinding_PartyServ")
+                    hasBasicPartyService = true;
             }
 
-            foreach (WSHttpBindingElement binding in secgroup.Bindings.WSHttpBinding.Bindings)
+            //Verify if the WSHttpBinding element exist
+            foreach (BasicHttpBindingElement binding in secgroup.Bindings.BasicHttpBinding.Bindings)
             {
-                if (binding.Name == "WSHttpBinding_INIWS_Partner")
-                    hasPrtner = true;
+                if (binding.Name == "WSHttpBinding_PartyServ")
+                    hasWsPartyService = true;
             }
 
-
-            //INIWS Validation
-            if (hasValidation == false)
+            //Basic Service
+            if (hasBasicPartyService == false)
             {
-                secgroup.Bindings.BasicHttpBinding.Bindings.Add(CreateBasicHttpBinding("BasicHttpBinding_INIWS_Validation",
+                secgroup.Bindings.BasicHttpBinding.Bindings.Add(CreateBasicHttpBinding("BasicHttpBinding_PartyServ",
                                                                                         BasicHttpSecurityMode.Transport, HttpClientCredentialType.None));
 
-                secgroup.Client.Endpoints.Add(CreateEndPoint("BasicHttpBinding_INIWS_Validation", "https://ws.netcash.co.za/NIWS/NIWS_Validation.svc",
-                                                                "basicHttpBinding", "BasicHttpBinding_INIWS_Validation", "NIWS_Validation.INIWS_Validation"));
+                secgroup.Client.Endpoints.Add(CreateEndPoint("BasicHttpBinding_PartyServ", "https://ws.domain.com/Party/Service.svc",
+                                                                "basicHttpBinding", "BasicHttpBinding_INPartyServ", "NewParty.ServiceRef"));
 
                 hasUpdate = true;
             }
 
-            //INIWS NIF
-            if (hasNIF == false)
+            //WS Service
+            if (hasWsPartyService == false)
             {
-                secgroup.Bindings.BasicHttpBinding.Bindings.Add(CreateBasicHttpBinding("BasicHttpBinding_INIWS_NIF",
-                                                                                        BasicHttpSecurityMode.Transport, HttpClientCredentialType.None));
+                secgroup.Bindings.WSHttpBinding.Bindings.Add(CreateWSHttpBinding("WSHttpBinding_PartyServ",
+                                                                                        SecurityMode.Transport, HttpClientCredentialType.None));
 
-                secgroup.Client.Endpoints.Add(CreateEndPoint("BasicHttpBinding_INIWS_NIF", "https://ws.netcash.co.za/NIWS/NIWS_NIF.svc",
-                                                                "basicHttpBinding", "BasicHttpBinding_INIWS_NIF", "NIWS_NIF.INIWS_NIF"));
-
-                hasUpdate = true;
-            }
-
-            //INIWS IPAYNow
-            if (hasPayNow == false)
-            {
-                secgroup.Bindings.BasicHttpBinding.Bindings.Add(CreateBasicHttpBinding("BasicHttpsBinding_IPayNow",
-                                                                                        BasicHttpSecurityMode.Transport, HttpClientCredentialType.None));
-
-                secgroup.Client.Endpoints.Add(CreateEndPoint("BasicHttpsBinding_IPayNow", "https://ws.netcash.co.za/PayNow/PayNow.svc",
-                                                                "basicHttpBinding", "BasicHttpsBinding_IPayNow", "NIWS_PayNow.IPayNow"));
-
-                hasUpdate = true;
-            }
-
-            //INIWS Partner
-            if (hasPrtner == false)
-            {
-                secgroup.Bindings.WSHttpBinding.Bindings.Add(CreateWSHttpBinding("WSHttpBinding_INIWS_Partner",
-                                                                                        BasicHttpSecurityMode.Transport, HttpClientCredentialType.None));
-
-                secgroup.Client.Endpoints.Add(CreateEndPoint("WSHttpBinding_INIWS_Partner", "https://ws.netcash.co.za/NIWS/NIWS_Validation.svc",
-                                                                "wsHttpBinding", "WSHttpBinding_INIWS_Partner", "NIWS_Partner.INIWS_Partner"));
+                secgroup.Client.Endpoints.Add(CreateEndPoint("WSHttpBinding_PartyServ", "https://ws.domain.com/Party/Service2.svc",
+                                                                "wsHttpBinding", "WSHttpBinding_PartyServ", "NewParty.ServiceRef2"));
 
                 hasUpdate = true;
             }
@@ -114,17 +82,17 @@ namespace AddingServiceReferences
         {
             BasicHttpBindingElement basicHttpBinding = new BasicHttpBindingElement();
             basicHttpBinding.Name = name;
-            basicHttpBinding.Security.Mode = BasicHttpSecurityMode.Transport;
-            basicHttpBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
+            basicHttpBinding.Security.Mode = mode;
+            basicHttpBinding.Security.Transport.ClientCredentialType = credentialType;
             return basicHttpBinding;
         }
 
-        private WSHttpBindingElement CreateWSHttpBinding(string name, BasicHttpSecurityMode mode, HttpClientCredentialType credentialType)
+        private WSHttpBindingElement CreateWSHttpBinding(string name, SecurityMode mode, HttpClientCredentialType credentialType)
         {
             WSHttpBindingElement wsHttpBinding = new WSHttpBindingElement();
             wsHttpBinding.Name = name;
-            wsHttpBinding.Security.Mode = SecurityMode.Transport;
-            wsHttpBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
+            wsHttpBinding.Security.Mode = mode;
+            wsHttpBinding.Security.Transport.ClientCredentialType = credentialType;
             return wsHttpBinding;
         }
 
